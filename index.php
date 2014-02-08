@@ -1,8 +1,10 @@
 <?php
   error_reporting(E_ALL);
+  include("config.php");
 
   header("content-type: text/xml");
   echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  echo "<Response>\n<Message>";
 
   $zip = $_REQUEST["Body"] ? $_REQUEST["Body"] : 46385;
 
@@ -17,6 +19,7 @@
   $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=30&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig";
   $json = file_get_contents($jsonurl);
   $resultObj = json_decode($json);
+
 //  filterByCategory($resultObj->LinearScheduleResult->Schedule->Airings, "Other");
 
 /*
@@ -52,21 +55,39 @@ Database Example Usage:
         print $db_error[2];
 */
 
-  $query = $database->prepare("SELECT * FROM recommendtv.users WHERE phone = :reqPhone");
-  $query->execute(array('phone' => $_REQUEST['from']));
-  if ($query)
-  {
-    $data = $query->fetchAll();
-    $num_rows = count($data);
-  } else { db_print_error(); }
+//  $query = $database->prepare("SELECT * FROM recommendtv.users WHERE phone = :reqPhone");
+//  $query->execute(array('phone' => $_REQUEST['from']));
+//  if ($query)
+//  {
+//    $data = $query->fetchAll();
+//    $num_rows = count($data);
+//  } else { db_print_error(); }
 
   $airings = $resultObj->LinearScheduleResult->Schedule->Airings;
+  $filteredAirings = filterByCategory($airings, "comedy");
 
-  foreach ($resultObj as $item)
+  function filterByCategory($airings, $category)
   {
-    $tt = $item.Title
+     $category = strtolower($category);
+     $result = array();
+
+     foreach ($airings as $program)
+     {
+       if (strconts(strtolower($program->Category), $category) || strconts(strtolower($program->Subcategory), $category))
+       {
+         array_push($result, $program);
+       }
+     }
+
+     return $result;
+  }
+
+  function strconts($string, $search)
+  {
+    return strpos($string, $search) !== false;
   }
 ?>
-<Response>
-  <Message><?php echo $tt; ?></Message>
+
+</Message>
 </Response>
+

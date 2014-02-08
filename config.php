@@ -3,9 +3,9 @@ global $db_host, $db_name, $db_user, $db_password, $db_error, $database, $db;
 
 // Begin user-configurable section.
 $db_host = 'localhost';
-$db_name = '';
-$db_user = '';
-$db_password = '';
+$db_name = 'recommendtv';
+$db_user = 'recommendtv';
+$db_password = 'F56A1EE3E3692380821A95083E0E67BB26151253';
 $db_error = '{"result":0,"message":"Database error!"}';
 // End user-configurable section.
 
