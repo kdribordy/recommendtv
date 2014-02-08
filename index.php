@@ -8,8 +8,6 @@
   $messageEl = $dom->createElement('Message');
   $message = "None";
 
-  //testing
-
   $body = $_REQUEST["Body"];
   $from = hash("sha256", $_REQUEST["From"]);
 
@@ -23,7 +21,6 @@
       if ($user["service_id"])
       {
         // Send them a suggestion
-
         // Try to infer a category from the message
         $category = tryExtractCategory($body);
 
@@ -34,7 +31,8 @@
           $airtime = date ('g:i A T',strtotime($suggestion->AiringTime));
           $message = "How about $suggestion->Title? It started at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes.";
         }
-        else {
+        else
+        {
           $message = "Sorry, there is literally nothing on.";
         }
       }
@@ -57,13 +55,15 @@
       if (preg_match("/\d{5}/", $body, $matches))
       {
         updateUserZip($from, $matches[0]);
-        //try to get a service id for the zip
+
+        // Try to get a service id for the zip
         $serviceProviders = getProvidersForZip($matches[0]);
         $message = "Zip code set to " . $matches[0] . ". ";
-        //now see if they sent us a service provider
+
+        // Now see if they sent us a service provider
         if (preg_match("/[A-z]+/", $body, $providerMatches))
         {
-          //they at least tried to give us a provider
+          // They at least tried to give us a provider
           $partialMatches = array();
           foreach($serviceProviders as $provider)
           {
@@ -72,17 +72,18 @@
               $partialMatches[] = $provider;
             }
           }
+
           $numberOfMatches = count($partialMatches);
-          if($numberOfMatches == 1)
+          if ($numberOfMatches == 1)
           {
             updateUserServiceId($from, $partialMatches[0]->ServiceId);
             $providerName = $partialMatches[0]->Name;
             $message .= "Service provider set to $providerName! Would you like a recommendation?";
           }
-          elseif($numberOfMatches > 1)
+          elseif ($numberOfMatches > 1)
           {
             $message = "There were a few matches. Select your provider: ";
-            foreach($partialMatches as $potentialMatch)
+            foreach ($partialMatches as $potentialMatch)
             {
               $message .= "$potentialMatch->ServiceId for $potentialMatch->Name\n";
             }
@@ -90,7 +91,7 @@
           else 
           {
             $message = "We couldn't find a match :/ Select your provider: ";
-            foreach($serviceProviders as $provider)
+            foreach ($serviceProviders as $provider)
             {
               $message .= "$provider->ServiceId - $provider->SystemName, ";
             }
@@ -99,7 +100,7 @@
         else
         {
           $message .= "Text back ";
-          foreach($serviceProviders as $provider)
+          foreach ($serviceProviders as $provider)
           {
             $message .= "$provider->ServiceId - $provider->SystemName, ";
           }
@@ -117,14 +118,6 @@
     $message = "Welcome to RecommendTvTo.us!  Reply with your ZIP code and TV provider (if you know it) to get started.";
     addUser($from, null);
   }
-
-//  $query = $database->prepare("SELECT * FROM recommendtv.users WHERE phone = :reqPhone");
-//  $query->execute(array('phone' => $_REQUEST['from']));
-//  if ($query)
-//  {
-//    $data = $query->fetchAll();
-//    $num_rows = count($data);
-//  } else { db_print_error(); }
   
   function getShowSuggestion($serviceId, $category)
   {
@@ -171,7 +164,7 @@
 
      foreach ($airings as $program)
      {
-       if (strconts($program->Category, $category) || strconts($program->Subcategory, $category))
+       if (strconts($program->Category, $category) || ($program->Subcategory && strconts($program->Subcategory, $category)))
        {
          array_push($result, $program);
        }
@@ -257,7 +250,7 @@
     return $providers;
   }
 
-//print XML Response
+// Print XML Response
 $messageEl->appendChild($dom->createTextNode($message));
 $responseEl->appendChild($messageEl); 
 $dom->appendChild($responseEl);
