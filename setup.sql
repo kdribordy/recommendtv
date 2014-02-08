@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS `suggestions` (
 CREATE TABLE IF NOT EXISTS `users` (
   `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `phone` varchar(64) NOT NULL,
-  `zip_code` varchar(5) NOT NULL,
-  `service_id` varchar(15) NOT NULL,
+  `zip_code` varchar(5),
+  `service_id` varchar(15),
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `ux_users_phone` (`phone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
