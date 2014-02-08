@@ -145,6 +145,8 @@
       $airings = filterByCategory($airings, $category);
     }
 
+    $airings = filterToLowChannels($airings);
+
     $airing_count = count($airings);
     if ($airing_count > 0)
     {
@@ -162,6 +164,21 @@
      foreach ($airings as $program)
      {
        if (strconts(strtolower($program->Category), $category) || strconts(strtolower($program->Subcategory), $category))
+       {
+         array_push($result, $program);
+       }
+     }
+
+     return $result;
+  }
+
+  function filterToLowChannels($airings)
+  {
+     $result = array();
+
+     foreach ($airings as $program)
+     {
+       if (preg_match("/^\d{1,2}$/", $program->Channel))
        {
          array_push($result, $program);
        }
