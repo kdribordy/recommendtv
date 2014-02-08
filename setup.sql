@@ -1,3 +1,11 @@
+-- Privelages
+
+GRANT USAGE ON *.* TO 'recommendtv'@'localhost' IDENTIFIED BY PASSWORD '*EE94963A378DA463891D1F53101F59BCF5013F69';
+
+GRANT SELECT, INSERT, UPDATE ON `recommendtv`.* TO 'recommendtv'@'localhost';
+
+-- End privelages
+
 -- phpMyAdmin SQL Dump
 -- version 3.4.10.1deb1
 -- http://www.phpmyadmin.net
