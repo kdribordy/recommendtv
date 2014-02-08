@@ -121,7 +121,7 @@
   
   function getShowSuggestion($serviceId, $category)
   {
-    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=30&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig";
+    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=5&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig";
     $json = file_get_contents($jsonurl);
     $resultObj = json_decode($json);
 
