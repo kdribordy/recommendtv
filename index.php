@@ -28,8 +28,10 @@
         
         if ($suggestion)
         {
-          $airtime = date ('g:i A T',strtotime($suggestion->AiringTime));
-          $message = "How about $suggestion->Title? It started at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes.";
+          $airtime = date ('g:i A T', strtotime($suggestion->AiringTime));
+          $now = strtotime("now");
+          $startWord = $now > strtotime($suggestion->AiringTime) ? "started" : "starts";
+          $message = "How about $suggestion->Title? It $startWord at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes.";
         }
         else
         {
