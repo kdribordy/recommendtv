@@ -22,8 +22,12 @@
     {
       if ($user["service_id"])
       {
-        // Send them a suggestions
-        $suggestion = getShowSuggestion($user["zip_code"], null);
+        // Send them a suggestion
+
+        // Try to infer a category from the message
+        $category = tryExtractCategory($body);
+
+        $suggestion = getShowSuggestion($user["zip_code"], $category);
         
         if ($suggestion)
         {
@@ -134,7 +138,7 @@
 
     $serviceId = $resultObj->ServicesResult->Services->Service[0]->ServiceId;
 
-    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=30&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig&inprogress=true";
+    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=30&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig";
     $json = file_get_contents($jsonurl);
     $resultObj = json_decode($json);
 
@@ -151,6 +155,21 @@
     if ($airing_count > 0)
     {
       return $airings[rand(0, $airing_count - 1)];
+    }
+
+    return null;
+  }
+
+  function tryExtractCategory($text)
+  {
+    $knownCategories = array("education", "sport", "golf", "hockey", "baseball", "basketball", "shop", "comedy", "fantasy", "drama", "tennis", "soccer", "variety", "documentary", "adult", "western", "horror", "religion", "music", "talk", "magazine", "news", "food", "reality", "travel", "animate", "football", "entertainment", "paranormal", "performance", "outdoors", "boxing", "biography", "musical", "politics", "nature", "movie", "children", "lifestyle", "music", "other");
+
+    foreach ($knownCategories as $category)
+    {
+      if (strconts($text, $category))
+      {
+        return $category;
+      }
     }
 
     return null;
