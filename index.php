@@ -63,7 +63,7 @@
           $partialMatches = array();
           foreach($serviceProviders as $provider)
           {
-            if(strconts(strtolower($provider->Name),strtolower($providerMatches[0])))
+            if(strconts($provider->Name, $providerMatches[0]))
             {
               $partialMatches[] = $provider;
             }
@@ -158,12 +158,11 @@
 
   function filterByCategory($airings, $category)
   {
-     $category = strtolower($category);
      $result = array();
 
      foreach ($airings as $program)
      {
-       if (strconts(strtolower($program->Category), $category) || strconts(strtolower($program->Subcategory), $category))
+       if (strconts($program->Category, $category) || strconts($program->Subcategory, $category))
        {
          array_push($result, $program);
        }
@@ -189,7 +188,7 @@
 
   function strconts($string, $search)
   {
-    return strpos($string, $search) !== false;
+    return strpos(strtolower($string), strtolower($search)) !== false;
   }
 
   function getUser($hashedPhone)
