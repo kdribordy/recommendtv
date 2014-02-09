@@ -3,9 +3,13 @@
   include("config.php");
 
   header("content-type: text/xml");
-  echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-  echo "<Response>\n<Message>";
+  $dom = new DOMDocument('1.0', 'utf-8');
+  $responseEl = $dom->createElement('Response'); 
+  $messageEl = $dom->createElement('Message');
   $message = "None";
+
+  //testing
+
   $body = $_REQUEST["Body"];
   $from = hash("sha256", $_REQUEST["From"]);
 
@@ -14,11 +18,19 @@
   if ($user)
   {
     // Check if the user has a ZIP code recorded
-    if ($user->zip)
+    if ($user["zip_code"])
     {
       // Send them a suggestions
-      $suggestion = getShowSuggestion($user->zip, null);
-      $message = $suggestion ? $suggestion->Title : "Sorry, there's nothing on.";
+      $suggestion = getShowSuggestion($user["zip_code"], null);
+      
+      if ($suggestion)
+      {
+        $airtime = date ('g:i A T',strtotime($suggestion->AiringTime));
+        $message = "How about $suggestion->Title? It started at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes.";
+      }
+      else {
+        $message = "Sorry, there is literally nothing on.";
+      }
     }
     else
     {
@@ -30,7 +42,7 @@
       }
       else
       {
-        $message = "I didn't understand your response. Reply with your ZIP code."
+        $message = "I didn't understand your response. Reply with your ZIP code.";
       }
     }
   }
@@ -41,39 +53,6 @@
     addUser($from, null);
   }
 
-/*
-Database Example Usage:
-        Basic PDO Query (Pre-Sanitized or No Data Sanitation Required):
-        $query = $database->query("SELECT * FROM ... WHERE ...");
-        if ($query) {
-                $data = $query->fetchAll();
-                $num_rows = count($data);
-        } else { db_print_error(); }
-
-        Prepared PDO Query (Protection from SQL Injections Built-in):
-        $query = $database->prepare("SELECT * FROM ... WHERE thing = :whatsit AND person = :whosit");
-        $query->execute(array('whatsit' => 'burger', 'whosit' => 'John'));
-        if ($query) {
-                $data = $query->fetchAll();
-                $num_rows = count($data);
-        } else { db_print_error(); }
-
-        For Transactions:
-        $database->beginTransaction();
-        ...statement code...
-        $database->commit();
-
-        Detecting Last Insert ID:
-        $database->lastInsertId();
-
-        Detecting Rows Deleted:
-        $query->rowCount();
-
-        Explanation of Querying Errors:
-        $db_error = $query->errorInfo();
-        print $db_error[2];
-*/
-
 //  $query = $database->prepare("SELECT * FROM recommendtv.users WHERE phone = :reqPhone");
 //  $query->execute(array('phone' => $_REQUEST['from']));
 //  if ($query)
@@ -81,13 +60,9 @@ Database Example Usage:
 //    $data = $query->fetchAll();
 //    $num_rows = count($data);
 //  } else { db_print_error(); }
-
-  $airings = $resultObj->LinearScheduleResult->Schedule->Airings;
-  $filteredAirings = filterByCategory($airings, "comedy");
-
+  
   function getShowSuggestion($zip, $category)
   {
-    $zip = $_REQUEST["Body"] ? $_REQUEST["Body"] : 46385;
 
     $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/services/postalcode/$zip/info?locale=en-US&countrycode=US&apikey=bnp966tdms7t9p5hze264wae&sig=sig";
 
@@ -97,7 +72,7 @@ Database Example Usage:
 
     $serviceId = $resultObj->ServicesResult->Services->Service[0]->ServiceId;
 
-    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=30&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig";
+    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=30&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig&inprogress=true";
     $json = file_get_contents($jsonurl);
     $resultObj = json_decode($json);
 
@@ -111,7 +86,7 @@ Database Example Usage:
     $airing_count = count($airings);
     if ($airing_count > 0)
     {
-      return $airings[rand(0, $airing_count - 1)]->Title;
+      return $airings[rand(0, $airing_count - 1)];
     }
 
     return null;
@@ -140,6 +115,7 @@ Database Example Usage:
 
   function getUser($hashedPhone)
   {
+    global $database;
     $query = $database->prepare("SELECT * FROM users WHERE phone = :phoneNumber");
     $query->execute(array(':phoneNumber' => $hashedPhone));
     $user = null;
@@ -160,20 +136,25 @@ Database Example Usage:
 
   function addUser($hashedPhone, $zip)
   {
+    global $database;
     $database->beginTransaction();
-    $statement = $database->prepare("INSERT INTO users (phone, zip) VALUES (:phoneNumber, :zipCode)");
+    $statement = $database->prepare("INSERT INTO users (phone, zip_code) VALUES (:phoneNumber, :zipCode)");
     $statement->execute(array(':phoneNumber' => $hashedPhone, ':zipCode' => $zip));
     $database->commit();
   }
 
   function updateUser($hashedPhone, $zip)
   {
+    global $database;
     $database->beginTransaction();
-    $statement = $database->prepare("UPDATE users SET zip = :zipCode WHERE phone = :phoneNumber");
+    $statement = $database->prepare("UPDATE users SET zip_code = :zipCode WHERE phone = :phoneNumber");
     $statement->execute(array(':phoneNumber' => $hashedPhone, ':zipCode' => $zip));
     $database->commit();
   }
-?>
 
-<?php echo $message ?></Message>
-</Response>
+//print XML Response
+$messageEl->appendChild($dom->createTextNode($message));
+$responseEl->appendChild($messageEl); 
+$dom->appendChild($responseEl);
+echo $dom->saveXml();
+?>
