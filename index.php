@@ -20,16 +20,31 @@
     // Check if the user has a ZIP code recorded
     if ($user["zip_code"])
     {
-      // Send them a suggestions
-      $suggestion = getShowSuggestion($user["zip_code"], null);
-      
-      if ($suggestion)
+      if ($user["service_id"])
       {
-        $airtime = date ('g:i A T',strtotime($suggestion->AiringTime));
-        $message = "How about $suggestion->Title? It started at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes.";
+        // Send them a suggestions
+        $suggestion = getShowSuggestion($user["zip_code"], null);
+        
+        if ($suggestion)
+        {
+          $airtime = date ('g:i A T',strtotime($suggestion->AiringTime));
+          $message = "How about $suggestion->Title? It started at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes.";
+        }
+        else {
+          $message = "Sorry, there is literally nothing on.";
+        }
       }
-      else {
-        $message = "Sorry, there is literally nothing on.";
+      else
+      {
+        if (preg_match("/\d+/", $body, $matches))
+        {
+          updateUserServiceId($from, $matches[0]);
+          $message = "Service provider set. Reply for a recommendation!";
+        }
+        else
+        {
+          $message = "Didn't quite understand that. Try again!";
+        }  
       }
     }
     else
@@ -37,8 +52,55 @@
       // Check if they sent us a ZIP code
       if (preg_match("/\d{5}/", $body, $matches))
       {
-        updateUser($from, $matches[0]);
-        $message = "Your ZIP code was set to " . $matches[0] . ".";
+        updateUserZip($from, $matches[0]);
+        //try to get a service id for the zip
+        $serviceProviders = getProvidersForZip($matches[0]);
+        $message = "ZIP code set to " . $matches[0] . ".";
+        //now see if they sent us a service provider
+        if (preg_match("/[A-z]+/", $body, $providerMatches))
+        {
+          //they at least tried to give us a provider
+          $partialMatches = array();
+          foreach($serviceProviders as $provider)
+          {
+            if(strconts(strtolower($provider->Name),strtolower($providerMatches[0])))
+            {
+              $partialMatches[] = $provider;
+            }
+          }
+          $numberOfMatches = count($partialMatches);
+          if($numberOfMatches == 1)
+          {
+            print_r($partialMatches);
+            updateUserServiceId($from, $partialMatches[0]->ServiceId);
+            $providerName = $partialMatches[0]->Name;
+            $message .= "Service provider set to $providerName!";
+          }
+          elseif($numberOfMatches > 1)
+          {
+            $message = "There were a few matches. Which provider is yours?  Text back ";
+            foreach($partialMatches as $potentialMatch)
+            {
+              $message .= "$potentialMatch->ServiceId for $potentialMatch->Name\n";
+            }
+          }
+          else 
+          {
+            $message = "We couldn't find a match :/ Text back ";
+            foreach($serviceProviders as $provider)
+            {
+              $message .= "$provider->ServiceId - $provider->SystemName, ";
+            }
+          }
+        }
+        else
+        {
+          $message .= "Text back ";
+          foreach($serviceProviders as $provider)
+          {
+            $message .= "$provider->ServiceId - $provider->SystemName, ";
+          }
+        }
       }
       else
       {
@@ -49,7 +111,7 @@
   else
   {
     // This is a new user
-    $message = "Welcome to RecommendTvTo.us!  Reply with your ZIP code to get started.";
+    $message = "Welcome to RecommendTvTo.us!  Reply with your ZIP code and TV provider (if you know it) to get started.";
     addUser($from, null);
   }
 
@@ -143,13 +205,31 @@
     $database->commit();
   }
 
-  function updateUser($hashedPhone, $zip)
+  function updateUserZip($hashedPhone, $zip)
   {
     global $database;
     $database->beginTransaction();
     $statement = $database->prepare("UPDATE users SET zip_code = :zipCode WHERE phone = :phoneNumber");
     $statement->execute(array(':phoneNumber' => $hashedPhone, ':zipCode' => $zip));
     $database->commit();
+  }
+
+  function updateUserServiceId($hashedPhone, $serviceId)
+  {
+    global $database;
+    $database->beginTransaction();
+    $statement = $database->prepare("UPDATE users SET service_id = :serviceId WHERE phone = :phoneNumber");
+    $statement->execute(array(':phoneNumber' => $hashedPhone, ':serviceId' => $serviceId));
+    $database->commit();
+  }
+
+  function getProvidersForZip($zip)
+  {
+    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/services/postalcode/47906/info?locale=en-US&countrycode=US&format=json&apikey=bnp966tdms7t9p5hze264wae";
+    $json = file_get_contents($jsonurl);
+    $resultObj = json_decode($json);
+    $providers = $resultObj->ServicesResult->Services->Service;
+    return $providers;
   }
 
 //print XML Response
