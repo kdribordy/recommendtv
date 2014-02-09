@@ -43,7 +43,7 @@
         if (preg_match("/\d+/", $body, $matches))
         {
           updateUserServiceId($from, $matches[0]);
-          $message = "Service provider set. Reply for a recommendation!";
+          $message = "Service provider set. Want a recommendation?";
         }
         else
         {
@@ -59,7 +59,7 @@
         updateUserZip($from, $matches[0]);
         //try to get a service id for the zip
         $serviceProviders = getProvidersForZip($matches[0]);
-        $message = "ZIP code set to " . $matches[0] . ".";
+        $message = "Zip code set to " . $matches[0] . ". ";
         //now see if they sent us a service provider
         if (preg_match("/[A-z]+/", $body, $providerMatches))
         {
@@ -75,14 +75,13 @@
           $numberOfMatches = count($partialMatches);
           if($numberOfMatches == 1)
           {
-            print_r($partialMatches);
             updateUserServiceId($from, $partialMatches[0]->ServiceId);
             $providerName = $partialMatches[0]->Name;
-            $message .= "Service provider set to $providerName!";
+            $message .= "Service provider set to $providerName! Would you like a recommendation?";
           }
           elseif($numberOfMatches > 1)
           {
-            $message = "There were a few matches. Which provider is yours?  Text back ";
+            $message = "There were a few matches. Select your provider: ";
             foreach($partialMatches as $potentialMatch)
             {
               $message .= "$potentialMatch->ServiceId for $potentialMatch->Name\n";
@@ -90,7 +89,7 @@
           }
           else 
           {
-            $message = "We couldn't find a match :/ Text back ";
+            $message = "We couldn't find a match :/ Select your provider: ";
             foreach($serviceProviders as $provider)
             {
               $message .= "$provider->ServiceId - $provider->SystemName, ";
@@ -108,7 +107,7 @@
       }
       else
       {
-        $message = "I didn't understand your response. Reply with your ZIP code.";
+        $message = "I didn't understand your response. Reply with your zip code.";
       }
     }
   }
