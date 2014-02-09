@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>RecommendTVTo.us</title>
+    <script type="text/javascript" src="tagcanvas.min.js" ></script>
+    <script type="text/javascript">
+      var taglines = ['Couch convenience.','So 2005.','Unlimited texting.','SMS is fun.','Boo data caps.'];
+      var tagline = taglines[Math.floor(Math.random()*(taglines.length))];
+      tagline = tagline + " Just text it.";
+      window.onload=function() {
+        document.getElementById('tagline').innerHTML=tagline;
+      }
+    </script>
+    <link rel="stylesheet" rel="text/css" href="style.css"/>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <div class="content">
+          <h1>(219) 682-0800</h1>
+          <h2 id="tagline">&nbsp;</h2>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
