@@ -121,7 +121,13 @@
     $message = "Welcome to RecommendTvTo.us!  Reply with your ZIP code and TV provider (if you know it) to get started.";
     addUser($from, null);
   }
-  
+
+  function make_seed()
+  {
+    list($usec, $sec) = explode(' ', microtime());
+    return (float) $sec + ((float) $usec * 100000);
+  }
+
   function getShowSuggestion($serviceId, $category)
   {
     $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/linearschedule/$serviceId/info?locale=en-US&duration=5&inprogress=true&apikey=tq9qyz3r86vjhqn9w49vf4dt&sig=sig";
@@ -140,7 +146,8 @@
     $airing_count = count($airings);
     if ($airing_count > 0)
     {
-      return $airings[rand(0, $airing_count - 1)];
+      mt_srand(make_seed());
+      return $airings[mt_rand(0, $airing_count - 1)];
     }
 
     return null;
