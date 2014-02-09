@@ -29,7 +29,8 @@
         if ($suggestion)
         {
           $airtime = date ('g:i A T',strtotime($suggestion->AiringTime));
-          $message = "How about $suggestion->Title? It started at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes.";
+          $synopsis = $suggestion->Copy ? substr($suggestion->Copy,0,85) . "...": "";
+          $message = "How about $suggestion->Title? It started at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes. $synopsis";
         }
         else
         {
