@@ -28,6 +28,7 @@
         
         if ($suggestion)
         {
+          $airtime = date ('g:i A T',strtotime($suggestion->AiringTime));
           $synopsis = $suggestion->Copy ? substr($suggestion->Copy,0,85) . "...": "";
           $now = strtotime("now");
           $startWord = $now > strtotime($suggestion->AiringTime) ? "started" : "starts";
@@ -245,7 +246,7 @@
 
   function getProvidersForZip($zip)
   {
-    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/services/postalcode/47906/info?locale=en-US&countrycode=US&format=json&apikey=bnp966tdms7t9p5hze264wae";
+    $jsonurl = "http://api.rovicorp.com/TVlistings/v9/listings/services/postalcode/$zip/info?locale=en-US&countrycode=US&format=json&apikey=bnp966tdms7t9p5hze264wae";
     $json = file_get_contents($jsonurl);
     $resultObj = json_decode($json);
     $providers = $resultObj->ServicesResult->Services->Service;
