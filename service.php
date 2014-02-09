@@ -1,5 +1,5 @@
 <?php
-  error_reporting(E_ALL);
+  error_reporting(0);
   include("config.php");
 
   header("content-type: text/xml");
@@ -102,10 +102,10 @@
         }
         else
         {
-          $message .= "Text back ";
+          $message .= "Text back:\n";
           foreach ($serviceProviders as $provider)
           {
-            $message .= "$provider->ServiceId - $provider->SystemName, ";
+            $message .= "$provider->ServiceId - $provider->SystemName\n ";
           }
         }
       }
