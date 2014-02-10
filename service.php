@@ -1,5 +1,5 @@
 <?php
-  error_reporting(0);
+//  error_reporting(0);
   include("config.php");
 
   header("content-type: text/xml");
@@ -10,10 +10,24 @@
 
   $body = $_REQUEST["Body"];
   $from = hash("sha256", $_REQUEST["From"]);
-
-  // Check if we have record of the user
   $user = getUser($from);
-  if ($user)
+  if (strcmp(trim($body),"?")==0)
+  {
+    //they want help
+    $message = "RecommendTVTo.us! Send a message to get TV recommendations. Send a category to get specialized suggestions. Send 'reset' to clear preferences.";
+  }
+  elseif (strcasecmp(trim($body),"reset")==0) {
+    global $database;
+    //delete user from db 
+    $database->beginTransaction();
+    $query = $database->prepare("DELETE FROM users WHERE phone = :phoneNumber");
+    $query->bindValue(':phoneNumber', $from);
+    $query->execute();
+    $database->commit();
+    $message = "Preferenes deleted. Text again to begin.";
+  }
+  // Check if we have record of the user
+  elseif ($user)
   {
     // Check if the user has a ZIP code recorded
     if ($user["zip_code"])
@@ -32,11 +46,11 @@
           $synopsis = $suggestion->Copy ? substr($suggestion->Copy,0,85) . "...": "";
           $now = strtotime("now");
           $startWord = $now > strtotime($suggestion->AiringTime) ? "started" : "starts";
-          $message = "How about \"$suggestion->Title\"? It $startWord at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes. $synopsis";
+          $message = "How about \"$suggestion->Title\"? It $startWord at $airtime on channel $suggestion->Channel and runs for $suggestion->Duration minutes. $synopsis Reply for another!";
         }
         else
         {
-          $message = "Sorry, there is literally nothing on.";
+          $message = "Sorry, we couldn't find anything for you. Try searching for something else!";
         }
       }
       else
@@ -96,7 +110,7 @@
             $message = "We couldn't find a match :/ Select your provider: ";
             foreach ($serviceProviders as $provider)
             {
-              $message .= "$provider->ServiceId - $provider->SystemName, ";
+              $message .= "$provider->ServiceId - $provider->Name, ";
             }
           }
         }
@@ -105,7 +119,7 @@
           $message .= "Text back:\n";
           foreach ($serviceProviders as $provider)
           {
-            $message .= "$provider->ServiceId - $provider->SystemName\n ";
+            $message .= "$provider->ServiceId - $provider->Name\n ";
           }
         }
       }
@@ -118,7 +132,7 @@
   else
   {
     // This is a new user
-    $message = "Welcome to RecommendTvTo.us!  Reply with your ZIP code and TV provider (if you know it) to get started.";
+    $message = "Welcome to RecommendTvTo.us!  Reply with your ZIP code and TV provider (if you know it) to get started. Send '?' for help!";
     addUser($from, null);
   }
 
@@ -189,7 +203,7 @@
 
      foreach ($airings as $program)
      {
-       if (preg_match("/^\d{1,2}$/", $program->Channel))
+       if (preg_match("/^\d{1,2}(\.\d*)?$/", $program->Channel))
        {
          array_push($result, $program);
        }
